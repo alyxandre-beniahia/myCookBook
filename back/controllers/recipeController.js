@@ -1,25 +1,37 @@
 const Recipe = require('../models/Recipe');
+const cloudinary = require('../config/cloudinary');
 
-// Create Recipe
 const createRecipe = async (req, res) => {
-  const { title, description, ingredients, steps, category, image } = req.body;
-  
   try {
+    let imageData = {};
+    
+    if (req.file) {
+      const b64 = Buffer.from(req.file.buffer).toString('base64');
+      const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+      
+      const result = await cloudinary.uploader.upload(dataURI);
+      imageData = {
+        public_id: result.public_id,
+        url: result.secure_url
+      };
+    }
+
     const recipe = await Recipe.create({
-      title,
-      description,
-      ingredients,
-      steps,
-      category,
-      image: image || 'placeholder.jpg',
+      ...req.body,
+      image: imageData,
       author: req.user._id
     });
 
     res.status(201).json(recipe);
   } catch (error) {
-    res.status(500).json({ message: 'Erreur lors de la création de la recette', error });
+    console.log('Error:', error);
+    res.status(500).json({ message: 'Error creating recipe', error });
   }
 };
+
+
+
+
 
 // Get All Recipes
 const getRecipes = async (req, res) => {
@@ -85,13 +97,14 @@ const updateRecipe = async (req, res) => {
   const deleteRecipe = async (req, res) => {
     try {
       const recipe = await Recipe.findById(req.params.id);
-  
+      
       if (!recipe) {
         return res.status(404).json({ message: 'Recette non trouvée' });
       }
   
-      if (recipe.author.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: 'Non autorisé à supprimer cette recette' });
+      // Delete image from Cloudinary if it exists
+      if (recipe.image && recipe.image.public_id) {
+        await cloudinary.uploader.destroy(recipe.image.public_id);
       }
   
       await Recipe.findByIdAndDelete(req.params.id);
@@ -100,6 +113,7 @@ const updateRecipe = async (req, res) => {
       res.status(500).json({ message: 'Erreur lors de la suppression de la recette', error });
     }
   };
+  
   
   const searchRecipes = async (req, res) => {
     const { query, category } = req.query;

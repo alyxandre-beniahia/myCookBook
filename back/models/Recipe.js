@@ -18,8 +18,13 @@ const RecipeSchema = new mongoose.Schema({
     required: true,
   }],
   image: {
-    type: String,
-    default: 'placeholder.jpg'
+    public_id: {
+      type: String,
+    },
+    url: {
+      type: String,
+      default: 'default_recipe_image_url'
+    }
   },
   category: {
     type: String,
