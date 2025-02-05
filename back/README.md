@@ -57,15 +57,15 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ## Getting Started
 
-1.Clone the repository
-2.Install dependencies: npm install
-3.Create .env file with required variables
-4.Run the server: npm start
+- Clone the repository
+- Install dependencies: npm install
+- Create .env file with required variables
+- Run the server: npm start
 
 ## Upcoming Features
 
-Recipe Rating System
-User Favorites
-Advanced Search
-Password Reset
-Email Verification
+- Recipe Rating System
+- User Favorites
+- Advanced Search
+- Password Reset
+- Email Verification
