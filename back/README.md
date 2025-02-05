@@ -59,8 +59,14 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 - Clone the repository
 - Install dependencies: npm install
+```bash
+    npm install
+```
 - Create .env file with required variables
 - Run the server: npm start
+```bash
+    npm start
+```
 
 ## Upcoming Features
 
