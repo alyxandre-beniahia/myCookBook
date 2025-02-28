@@ -15,6 +15,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  favorites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Recipe'
+  }]
 });
 
 // Hash le mot de passe avant de sauvegarder l'utilisateur

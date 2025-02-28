@@ -143,6 +143,45 @@ const updateRecipe = async (req, res) => {
       res.status(500).json({ message: 'Erreur lors de la recherche des recettes', error });
     }
   };
+  
+  const addRating = async (req, res) => {
+    try {
+      const recipe = await Recipe.findById(req.params.id);
+      const { value } = req.body;
+      
+      // Create new rating entry
+      recipe.ratings.push({ 
+        user: req.user._id, 
+        value: value 
+      });
+      
+      const updatedRecipe = await recipe.save();
+      res.status(200).json(updatedRecipe);
+    } catch (error) {
+      res.status(500).json({ message: 'Error adding rating', error });
+    }
+  };
+  
+  
+  const getRecipeRating = async (req, res) => {
+    try {
+      const recipe = await Recipe.findById(req.params.id);
+      console.log('Recipe ratings:', recipe.ratings);
+      if (recipe.ratings.length === 0) {
+        return res.status(200).json({ average: 0, total: 0 });
+      }
+      
+      const average = recipe.ratings.reduce((acc, curr) => acc + curr.value, 0) / recipe.ratings.length;
+      res.status(200).json({ 
+        average: Number(average.toFixed(1)), 
+        total: recipe.ratings.length 
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Error getting rating', error });
+    }
+  };
+  
+  
 
 
   
@@ -153,6 +192,8 @@ const updateRecipe = async (req, res) => {
     updateRecipe, 
     deleteRecipe,
     searchRecipes,
+    addRating,
+    getRecipeRating
   };
   
 
