@@ -3,8 +3,10 @@ const Recipe = require('../models/Recipe');
 
 const createComment = async (req, res) => {
   try {
-    console.log('Recipe ID:', req.params.recipeId);
-    
+    const recipe = await Recipe.findById(req.params.recipeId);
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recette non trouvée' });
+    }
     const comment = await Comment.create({
       recipe: req.params.recipeId,
       user: req.user._id,

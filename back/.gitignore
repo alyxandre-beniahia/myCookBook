@@ -3,3 +3,4 @@ config/
 .env
 .vscode/
 TODO.md
+.qodo

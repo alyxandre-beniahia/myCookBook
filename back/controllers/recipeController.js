@@ -25,7 +25,7 @@ const createRecipe = async (req, res) => {
     res.status(201).json(recipe);
   } catch (error) {
     console.log('Error:', error);
-    res.status(500).json({ message: 'Error creating recipe', error });
+    res.status(500).json({ message: '(createRecipe)Error creating recipe', error });
   }
 };
 
@@ -42,7 +42,7 @@ const getRecipes = async (req, res) => {
 
     res.status(200).json(recipes);
   } catch (error) {
-    res.status(500).json({ message: 'Erreur lors de la récupération des recettes', error });
+    res.status(500).json({ message: '(getRecipes)Erreur lors de la récupération des recettes', error });
   }
 };
 
@@ -62,37 +62,45 @@ const getRecipeById = async (req, res) => {
 
     res.status(200).json(recipe);
   } catch (error) {
-    res.status(500).json({ message: 'Erreur lors de la récupération de la recette', error });
+    res.status(500).json({ message: '(getRecipeById)Erreur lors de la récupération de la recette', error });
   }
 };
 
 // Add these to the existing controller file:
 
 const updateRecipe = async (req, res) => {
-    const { title, description, ingredients, steps, category, image } = req.body;
-  
-    try {
-      let recipe = await Recipe.findById(req.params.id);
-  
-      if (!recipe) {
-        return res.status(404).json({ message: 'Recette non trouvée' });
-      }
-  
-      if (recipe.author.toString() !== req.user._id.toString()) {
-        return res.status(403).json({ message: 'Non autorisé à modifier cette recette' });
-      }
-  
-      recipe = await Recipe.findByIdAndUpdate(
-        req.params.id,
-        { title, description, ingredients, steps, category, image },
-        { new: true }
-      );
-  
-      res.status(200).json(recipe);
-    } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la modification de la recette', error });
+  try {
+    let recipe = await Recipe.findById(req.params.id);
+
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recette non trouvée' });
     }
-  };
+
+    if (recipe.author.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Non autorisé à modifier cette recette' });
+    }
+
+    const updateData = {};
+    const allowedFields = ['title', 'description', 'ingredients', 'steps', 'category', 'image'];
+    
+    Object.keys(req.body).forEach(field => {
+      if (allowedFields.includes(field)) {
+        updateData[field] = req.body[field];
+      }
+    });
+
+    recipe = await Recipe.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true }
+    );
+
+    res.status(200).json(recipe);
+  } catch (error) {
+    res.status(500).json({ message: '(updateRecipe)Erreur lors de la modification de la recette', error });
+  }
+};
+
   
   const deleteRecipe = async (req, res) => {
     try {
@@ -110,7 +118,7 @@ const updateRecipe = async (req, res) => {
       await Recipe.findByIdAndDelete(req.params.id);
       res.status(200).json({ message: 'Recette supprimée avec succès' });
     } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la suppression de la recette', error });
+      res.status(500).json({ message: '(deleteRecipe)Erreur lors de la suppression de la recette', error });
     }
   };
   
@@ -140,27 +148,49 @@ const updateRecipe = async (req, res) => {
   
       res.status(200).json(recipes);
     } catch (error) {
-      res.status(500).json({ message: 'Erreur lors de la recherche des recettes', error });
+      res.status(500).json({ message: '(searchRecipes)Erreur lors de la recherche des recettes', error });
     }
   };
   
   const addRating = async (req, res) => {
     try {
       const recipe = await Recipe.findById(req.params.id);
+      
+      // Check if recipe exists
+      if (!recipe) {
+        return res.status(404).json({ message: 'Recipe not found' });
+      }
+      
       const { value } = req.body;
       
-      // Create new rating entry
-      recipe.ratings.push({ 
-        user: req.user._id, 
-        value: value 
-      });
+      // Validate value
+      if (value === undefined || value < 1 || value > 5) {
+        return res.status(400).json({ message: 'Rating value must be between 1 and 5' });
+      }
+      
+      // Check for existing rating by this user
+      const existingRatingIndex = recipe.ratings.findIndex(
+        rating => rating.user.toString() === req.user._id.toString()
+      );
+      
+      if (existingRatingIndex !== -1) {
+        // Update existing rating
+        recipe.ratings[existingRatingIndex].value = value;
+      } else {
+        // Add new rating
+        recipe.ratings.push({ 
+          user: req.user._id, 
+          value: value 
+        });
+      }
       
       const updatedRecipe = await recipe.save();
       res.status(200).json(updatedRecipe);
     } catch (error) {
-      res.status(500).json({ message: 'Error adding rating', error });
+      console.log('Rating error:', error); // Log the full error
+      res.status(500).json({ message: 'Error adding rating', error: error.message });
     }
-  };
+  };  
   
   
   const getRecipeRating = async (req, res) => {
@@ -177,7 +207,7 @@ const updateRecipe = async (req, res) => {
         total: recipe.ratings.length 
       });
     } catch (error) {
-      res.status(500).json({ message: 'Error getting rating', error });
+      res.status(500).json({ message: '(getRecipeRating)Erreur lors de la récupération de la note', error });
     }
   };
   

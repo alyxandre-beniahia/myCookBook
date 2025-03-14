@@ -1,0 +1,334 @@
+{
+    "info": {
+      "name": "myCookBook API",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+      {
+        "key": "base_url",
+        "value": "http://localhost:5000"
+      }
+    ],
+    "item": [
+      {
+        "name": "Auth",
+        "item": [
+          {
+            "name": "Register",
+            "request": {
+              "method": "POST",
+              "url": "{{base_url}}/api/auth/register",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Login",
+            "request": {
+              "method": "POST",
+              "url": "{{base_url}}/api/auth/login",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123\"\n}"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "name": "Recipes",
+        "item": [
+          {
+            "name": "Get All Recipes",
+            "request": {
+              "method": "GET",
+              "url": "{{base_url}}/api/recipes"
+            }
+          },
+          {
+            "name": "Search Recipes",
+            "request": {
+              "method": "GET",
+              "url": {
+                "raw": "{{base_url}}/api/recipes/search?query=pasta&category=plat",
+                "query": [
+                  {
+                    "key": "query",
+                    "value": "pasta"
+                  },
+                  {
+                    "key": "category",
+                    "value": "plat"
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "name": "Get Recipe by ID",
+            "request": {
+              "method": "GET",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}"
+            }
+          },
+          {
+            "name": "Create Recipe",
+            "request": {
+              "method": "POST",
+              "url": "{{base_url}}/api/recipes",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Test Recipe\",\n  \"description\": \"This is a test recipe\",\n  \"ingredients\": [\"ingredient 1\", \"ingredient 2\"],\n  \"steps\": [\"step 1\", \"step 2\"],\n  \"category\": \"plat\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Update Recipe",
+            "request": {
+              "method": "PATCH",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"title\": \"Updated Recipe\",\n  \"description\": \"This recipe has been updated\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Delete Recipe",
+            "request": {
+              "method": "DELETE",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Rate Recipe",
+            "request": {
+              "method": "POST",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}/ratings",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"value\": 5\n}"
+              }
+            }
+          },
+          {
+            "name": "Get Recipe Rating",
+            "request": {
+              "method": "GET",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}/ratings"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Comments",
+        "item": [
+          {
+            "name": "Get Recipe Comments",
+            "request": {
+              "method": "GET",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}/comments"
+            }
+          },
+          {
+            "name": "Create Comment",
+            "request": {
+              "method": "POST",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}/comments",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"content\": \"This is a test comment\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Delete Comment",
+            "request": {
+              "method": "DELETE",
+              "url": "{{base_url}}/api/recipes/{{recipe_id}}/comments/{{comment_id}}",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "name": "Users",
+        "item": [
+          {
+            "name": "Get All Users",
+            "request": {
+              "method": "GET",
+              "url": "{{base_url}}/api/users"
+            }
+          },
+          {
+            "name": "Get User by ID",
+            "request": {
+              "method": "GET",
+              "url": "{{base_url}}/api/users/{{user_id}}"
+            }
+          },
+          {
+            "name": "Update User",
+            "request": {
+              "method": "PATCH",
+              "url": "{{base_url}}/api/users/{{user_id}}",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"name\": \"Updated Name\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Update Password",
+            "request": {
+              "method": "PATCH",
+              "url": "{{base_url}}/api/users/{{user_id}}/update-password",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n  \"currentPassword\": \"Password123\",\n  \"newPassword\": \"NewPassword123\"\n}"
+              }
+            }
+          },
+          {
+            "name": "Delete User",
+            "request": {
+              "method": "DELETE",
+              "url": "{{base_url}}/api/users/{{user_id}}",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Get User Favorites",
+            "request": {
+              "method": "GET",
+              "url": "{{base_url}}/api/users/favorites",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Add to Favorites",
+            "request": {
+              "method": "PATCH",
+              "url": "{{base_url}}/api/users/favorites/{{recipe_id}}",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ]
+            }
+          },
+          {
+            "name": "Remove from Favorites",
+            "request": {
+              "method": "DELETE",
+              "url": "{{base_url}}/api/users/favorites/{{recipe_id}}",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+  

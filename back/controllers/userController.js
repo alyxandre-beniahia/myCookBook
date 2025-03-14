@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const bcrypt = require('bcrypt');
 
 const getUsers = async (req, res) => {
     try {
@@ -30,16 +31,30 @@ const updateUser = async (req, res) => {
         if (user._id.toString() !== req.user._id.toString()) {
             return res.status(403).json({ message: 'Not authorized' });
         }
+
+        // Create an update object with only allowed fields
+        const updateData = {};
+        const allowedFields = ['name', 'email', 'favorites']; // Add any other fields that should be updatable
+        
+        Object.keys(req.body).forEach(field => {
+            if (allowedFields.includes(field)) {
+                updateData[field] = req.body[field];
+            }
+        });
+
+        // Use $set operator for partial updates
         const updatedUser = await User.findByIdAndUpdate(
             req.params.id,
-            req.body,
+            { $set: updateData },
             { new: true }
         ).select('-password');
+        
         res.status(200).json(updatedUser);
     } catch (error) {
         res.status(500).json({ message: 'Error updating user', error });
     }
 };
+
 
 const deleteUser = async (req, res) => {
     try {
@@ -91,6 +106,66 @@ const getFavorites = async (req, res) => {
         res.status(500).json({ message: 'Error fetching favorites', error });
     }
 };
+const updatePassword = async (req, res) => {
+    try {
+        // Log what we're receiving to help debug
+        console.log('Update password request for user:', req.user._id);
+        
+        const user = await User.findById(req.user._id);
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        const { currentPassword, newPassword } = req.body;
+        
+        // Check if both passwords are provided
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ 
+                message: 'Both current password and new password are required' 
+            });
+        }
+        
+        // Verify current password
+        const isMatch = await bcrypt.compare(currentPassword, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+        
+        // Validate new password format (in case validation middleware didn't catch it)
+        if (newPassword.length < 6) {
+            return res.status(400).json({ 
+                message: 'New password must be at least 6 characters long' 
+            });
+        }
+        
+        if (!/\d/.test(newPassword)) {
+            return res.status(400).json({ 
+                message: 'New password must contain at least one number' 
+            });
+        }
+        
+        if (!/[A-Z]/.test(newPassword)) {
+            return res.status(400).json({ 
+                message: 'New password must contain at least one uppercase letter' 
+            });
+        }
+        
+        // Update the password
+        user.password = newPassword;
+        await user.save();
+        
+        res.status(200).json({ message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Password update error:', error);
+        res.status(500).json({ 
+            message: 'Error updating password', 
+            error: error.message || 'Unknown error' 
+        });
+    }
+};
+
+
 
 module.exports = {
     getUsers,
@@ -99,5 +174,6 @@ module.exports = {
     deleteUser,
     addToFavorites,
     removeFromFavorites,
-    getFavorites
+    getFavorites,
+    updatePassword,
 };

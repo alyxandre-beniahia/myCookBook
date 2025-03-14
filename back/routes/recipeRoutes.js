@@ -1,21 +1,32 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middlewares/authMiddleware');
-const { validateRecipe } = require('../middlewares/validateMiddleware');
-const { createRecipe, getRecipes, getRecipeById, updateRecipe, deleteRecipe, searchRecipes, addRating, getRecipeRating } = require('../controllers/recipeController');
-const upload = require('../middlewares/uploadMiddleware');
+const { 
+    createRecipe, 
+    getRecipes, 
+    getRecipeById, 
+    updateRecipe, 
+    deleteRecipe,
+    searchRecipes,
+    addRating,
+    getRecipeRating
+} = require('../controllers/recipeController');
 
-router.get('/search', searchRecipes);
+const { 
+    validateRecipeData, 
+    validateRecipeUpdate,
+    validateRecipeId,
+    validateRatingData
+} = require('../middlewares/validation/recipeValidation');
 
-// Combined single POST route
-router.post('/', protect, upload.single('image'), validateRecipe, createRecipe);
 
+router.post('/', protect, validateRecipeData, createRecipe);
 router.get('/', getRecipes);
-router.get('/:id', getRecipeById);
-router.put('/:id', protect, validateRecipe, updateRecipe);
-router.delete('/:id', protect, deleteRecipe);
-router.post('/:id/ratings', protect, addRating);
-router.get('/:id/ratings', getRecipeRating);
-
+router.get('/search', searchRecipes);
+router.get('/:id', validateRecipeId, getRecipeById);
+router.patch('/:id', protect, validateRecipeId, validateRecipeUpdate, updateRecipe);
+router.delete('/:id', protect, validateRecipeId, deleteRecipe);
+router.post('/:id/ratings', protect, validateRecipeId, validateRatingData, addRating);
+router.get('/:id/ratings', validateRecipeId, getRecipeRating);
 
 module.exports = router;
