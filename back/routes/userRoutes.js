@@ -22,8 +22,8 @@ const { validateRecipeId } = require('../middlewares/validation/recipeValidation
 
 // Apply validation middleware to routes
 router.get('/favorites', protect, getFavorites);
-router.patch('/favorites/:recipeId', protect,  validateRecipeId, addToFavorites);
-router.delete('/favorites/:recipeId', protect, validateRecipeId, removeFromFavorites);
+router.patch('/favorites/:id', protect,  validateRecipeId, addToFavorites);
+router.delete('/favorites/:id', protect, validateRecipeId, removeFromFavorites);
 
 router.get('/', getUsers);
 router.get('/:id', validateUserId, getUserById);

@@ -71,41 +71,59 @@ const deleteUser = async (req, res) => {
         res.status(500).json({ message: 'Error deleting user', error });
     }
 };
-
+// Add to favorites// Add to favorites
 const addToFavorites = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
-        const recipeId = req.params.recipeId;
-        if (!user.favorites.includes(recipeId)) {
-            user.favorites.push(recipeId);
-            await user.save();
-        }
-        res.status(200).json({ message: 'Recipe added to favorites' });
+      const userId = req.user.id;
+      const recipeId = req.params.id;
+      
+      // Update the user by adding the recipe to their favorites array
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { favorites: recipeId } }, // $addToSet prevents duplicates
+        { new: true }
+      );
+      
+      res.json(user.favorites);
     } catch (error) {
-        res.status(500).json({ message: 'Error adding to favorites', error });
+      res.status(400).json({ message: error.message });
     }
-};
+  };
+  
+  // Get favorites
+  const getFavorites = async (req, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Find the user and populate their favorites
+      const user = await User.findById(userId).populate('favorites');
+      
+      res.json(user.favorites || []);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  };
+  
+  
 
 const removeFromFavorites = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id);
-        const recipeId = req.params.recipeId;
-        user.favorites = user.favorites.filter(id => id.toString() !== recipeId);
-        await user.save();
-        res.status(200).json({ message: 'Recipe removed from favorites' });
+      const userId = req.user.id;
+      const recipeId = req.params.id;
+      
+      // Update the user by removing the recipe from their favorites array
+      const user = await User.findByIdAndUpdate(
+        userId,
+        { $pull: { favorites: recipeId } }, // $pull removes the recipeId from the favorites array
+        { new: true }
+      );
+      
+      res.json(user.favorites || []);
     } catch (error) {
-        res.status(500).json({ message: 'Error removing from favorites', error });
+      res.status(400).json({ message: error.message });
     }
-};
-
-const getFavorites = async (req, res) => {
-    try {
-        const user = await User.findById(req.user._id).populate('favorites');
-        res.status(200).json(user.favorites);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching favorites', error });
-    }
-};
+  };
+  
 const updatePassword = async (req, res) => {
     try {
         // Log what we're receiving to help debug

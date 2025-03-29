@@ -1,0 +1,19 @@
+/api/auth/register POST {name, email,password}
+/api/auth/login POST {email, password}
+
+/api/recipes GET
+/api/recipes/:id GET
+/api/recipes/:id PATCH {'title', 'description', 'ingredients', 'steps', 'category', 'image'} Partial update possible
+/api/recipes/:id DELETE
+/api/recipes/:id/ratings POST   {user_id, value}
+/api/recipes/:id/ratings GET     
+
+/api/recipes/:recipeId/comments GET
+/api/recipes/:recipeId/comments POST  {recipe, user_id, content}
+/api/recipes/:recipeId/comments DELETE
+
+/api/users/      GET
+/api/users/:id   GET
+/api/users/:id   PATCH {name, email, favorites}
+/api/users/:id/update-password PATCH {password}
+/api/users/:id   DELETE

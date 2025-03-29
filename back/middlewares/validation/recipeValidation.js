@@ -83,7 +83,7 @@ const validateRecipeUpdate = [
 
 // Validate recipe ID
 const validateRecipeId = [
-  param('recipeId')
+  param('id')
     .isMongoId().withMessage('Invalid recipe ID format'),
   
   validateResults
