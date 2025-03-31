@@ -54,25 +54,22 @@ const RecipeDetail = () => {
     fetchRecipe();
   }, [id]);
 
-  const checkFavorite = async () => {
-    if (!user) return;
-
-    try {
-      const favorites = await getFavorites();
-      // Assuming favorites is an array of recipe IDs or recipe objects with _id property
-      const isFavorite = favorites.some((fav) =>
-        typeof fav === "string" ? fav === recipe._id : fav._id === recipe._id
-      );
-      setIsFavorited(isFavorite);
-    } catch (error) {
-      console.error("Error checking favorites:", error);
-    }
-  };
-
   useEffect(() => {
-    if (recipe && user) {
-      checkFavorite();
-    }
+    const checkFavorite = async () => {
+      if (!user || !recipe) return;
+
+      try {
+        const favorites = await getFavorites();
+        const isFavorite = favorites.some((fav) =>
+          typeof fav === "string" ? fav === recipe._id : fav._id === recipe._id
+        );
+        setIsFavorited(isFavorite);
+      } catch (error) {
+        console.error("Error checking favorites:", error);
+      }
+    };
+
+    checkFavorite();
   }, [recipe, user]);
 
   const handleFavoriteToggle = async () => {
@@ -284,5 +281,4 @@ const RecipeDetail = () => {
     </div>
   );
 };
-
 export default RecipeDetail;

@@ -1,69 +1,105 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import GooeyNav from "./GooeyNav";
 
 const Header = () => {
   const { user, logout } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  // Define navigation items based on user authentication status
+  const getNavItems = () => {
+    const baseItems = [
+      { label: "Home", href: "/" },
+      { label: "Search", href: "/recipes/search" },
+    ];
+
+    const authItems = user
+      ? [
+          ...baseItems,
+          { label: "Favorites", href: "/favorites" },
+          { label: "Add Recipe", href: "/recipes/create" },
+          { label: "Logout", href: "#logout" }, // Special handling for logout
+        ]
+      : [
+          ...baseItems,
+          { label: "Login", href: "/login" },
+          { label: "Register", href: "/register" },
+        ];
+
+    return authItems;
+  };
+
+  // Update active index based on current location
+  useEffect(() => {
+    const navItems = getNavItems();
+    const currentPath = location.pathname;
+
+    // Find the index of the current path in our nav items
+    const index = navItems.findIndex((item) => {
+      if (item.href === "#logout") return false;
+      if (item.href === "/" && currentPath === "/") return true;
+      return currentPath.startsWith(item.href);
+    });
+
+    // If found, update the active index
+    if (index !== -1) {
+      setActiveIndex(index);
+    }
+  }, [location.pathname, user]);
+
+  // Custom navigation handler
+  const handleNavigation = (item) => {
+    if (item.href === "#logout") {
+      logout();
+      navigate("/");
+    } else {
+      navigate(item.href);
+    }
+  };
+
   return (
-    <header className="bg-white shadow-md">
+    <header className="bg-[#262633] text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <h1 className="text-xl font-bold text-primary-600">myCookBook</h1>
+              <h1 className="text-xl font-bold text-white">myCookBook</h1>
             </Link>
           </div>
-          
-          {/* Desktop navigation */}
-          <nav className="hidden md:flex items-center space-x-4">
-            <Link to="/" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600">
-              Home
-            </Link>
-            <Link to="/recipes/search" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600">
-              Search
-            </Link>
-            
-            {user ? (
-              <>
-                <Link to="/favorites" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600">
-                  Favorites
-                </Link>
-                <Link to="/recipes/create" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600">
-                  Add Recipe
-                </Link>
-                <div className="relative ml-3">
-                  <button 
-                    onClick={logout}
-                    className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600"
-                  >
-                    Logout
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-primary-600">
-                  Login
-                </Link>
-                <Link to="/register" className="px-3 py-2 rounded-md text-sm font-medium bg-primary-600 text-white hover:bg-primary-700">
-                  Register
-                </Link>
-              </>
-            )}
-          </nav>
-          
+
+          {/* Desktop navigation with GooeyNav - all white */}
+          <div className="hidden md:flex items-center">
+            <div style={{ position: "relative" }}>
+              <GooeyNav
+                items={getNavItems().map((item) => ({
+                  ...item,
+                  onClick: () => handleNavigation(item),
+                }))}
+                animationTime={600}
+                particleCount={15}
+                particleDistances={[90, 10]}
+                particleR={100}
+                timeVariance={300}
+                colors={["white", "white", "white", "white"]} // All white particles
+                initialActiveIndex={activeIndex}
+              />
+            </div>
+          </div>
+
           {/* Mobile menu button */}
           <div className="flex items-center md:hidden">
             <button
               onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+              className="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
             >
               <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
@@ -80,65 +116,26 @@ const Header = () => {
       {isMenuOpen && (
         <div className="md:hidden">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link 
-              to="/" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600"
-              onClick={toggleMenu}
-            >
-              Home
-            </Link>
-            <Link 
-              to="/recipes/search" 
-              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600"
-              onClick={toggleMenu}
-            >
-              Search
-            </Link>
-            
-            {user ? (
-              <>
-                <Link 
-                  to="/favorites" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600"
-                  onClick={toggleMenu}
-                >
-                  Favorites
-                </Link>
-                <Link 
-                  to="/recipes/create" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600"
-                  onClick={toggleMenu}
-                >
-                  Add Recipe
-                </Link>
-                <button 
-                  onClick={() => {
+            {getNavItems().map((item, index) => (
+              <Link
+                key={index}
+                to={item.href === "#logout" ? "/" : item.href}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  index === activeIndex
+                    ? "bg-gray-700 text-white"
+                    : "text-white hover:text-gray-300"
+                }`}
+                onClick={(e) => {
+                  if (item.href === "#logout") {
+                    e.preventDefault();
                     logout();
-                    toggleMenu();
-                  }}
-                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600"
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link 
-                  to="/login" 
-                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary-600"
-                  onClick={toggleMenu}
-                >
-                  Login
-                </Link>
-                <Link 
-                  to="/register" 
-                  className="block px-3 py-2 rounded-md text-base font-medium bg-primary-600 text-white hover:bg-primary-700"
-                  onClick={toggleMenu}
-                >
-                  Register
-                </Link>
-              </>
-            )}
+                  }
+                  toggleMenu();
+                }}
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
         </div>
       )}

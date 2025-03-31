@@ -1,129 +1,148 @@
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { HeartIcon as HeartOutline } from "@heroicons/react/24/outline";
-import { HeartIcon as HeartSolid } from "@heroicons/react/24/solid";
-import { StarIcon } from "@heroicons/react/24/solid";
-import { useState, useEffect } from "react";
-import { useAuth } from "../../hooks/useAuth";
-import {
-  addToFavorites,
-  removeFromFavorites,
-  getRecipeRating,
-} from "../../services/recipeService";
+import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
+import { HeartIcon } from "@heroicons/react/24/outline";
+import { ClockIcon, UserIcon, FireIcon } from "@heroicons/react/24/outline";
 
 const RecipeCard = ({
   recipe,
-  isFavorite: initialIsFavorite = false,
+  isFavorite,
   onFavoriteToggle,
+  height,
+  className = "",
+  id,
 }) => {
-  const { user } = useAuth();
-  const [isFavorite, setIsFavorite] = useState(initialIsFavorite);
-  const [isLoading, setIsLoading] = useState(false);
-  const [rating, setRating] = useState({ average: 0, total: 0 });
+  const [imageError, setImageError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // Update isFavorite state when the prop changes
-  useEffect(() => {
-    setIsFavorite(initialIsFavorite);
-  }, [initialIsFavorite]);
+  if (!recipe) return null;
 
-  // Fetch rating for this recipe
-  useEffect(() => {
-    const fetchRating = async () => {
-      try {
-        const ratingData = await getRecipeRating(recipe._id);
-        setRating(ratingData);
-      } catch (error) {
-        console.error("Error fetching recipe rating:", error);
-      }
-    };
+  const { _id, title, description, author, category } = recipe;
 
-    fetchRating();
-  }, [recipe._id]);
+  // Extract the image URL from different possible structures
+  let imageUrl = "";
+  if (recipe.image) {
+    if (typeof recipe.image === "object" && recipe.image.url) {
+      imageUrl = recipe.image.url;
+    } else if (typeof recipe.image === "string") {
+      imageUrl = recipe.image;
+    }
+  } else if (recipe.imageUrl) {
+    imageUrl = recipe.imageUrl;
+  } else if (recipe.imagePath) {
+    imageUrl = recipe.imagePath;
+  }
 
-  const handleFavoriteToggle = async (e) => {
+  // Get preparation time or default
+  const prepTime = recipe.prepTime || recipe.preparationTime || "30 min";
+
+  // Get difficulty or default
+  const difficulty = recipe.difficulty || "Medium";
+
+  const handleFavoriteClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
-    if (!user) return;
-
-    setIsLoading(true);
-    try {
-      if (isFavorite) {
-        await removeFromFavorites(recipe._id);
-      } else {
-        await addToFavorites(recipe._id);
-      }
-
-      setIsFavorite(!isFavorite);
-      if (onFavoriteToggle) {
-        onFavoriteToggle(recipe._id, !isFavorite);
-      }
-    } catch (error) {
-      console.error("Error toggling favorite:", error);
-    } finally {
-      setIsLoading(false);
+    if (onFavoriteToggle) {
+      onFavoriteToggle(_id, !isFavorite);
     }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-      <Link to={`/recipes/${recipe._id}`} className="block">
-        <div className="relative h-48">
-          {recipe.image?.url ? (
-            <img
-              src={recipe.image.url}
-              alt={recipe.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-              <span className="text-gray-400">No image</span>
-            </div>
-          )}
-
-          {user && (
-            <button
-              onClick={handleFavoriteToggle}
-              disabled={isLoading}
-              className="absolute top-2 right-2 p-2 bg-white bg-opacity-70 rounded-full hover:bg-opacity-100 transition-all"
-            >
-              {isFavorite ? (
-                <HeartSolid className="h-6 w-6 text-red-500" />
-              ) : (
-                <HeartOutline className="h-6 w-6 text-gray-600" />
-              )}
-            </button>
-          )}
-
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
-            <h3 className="text-white font-bold text-lg truncate">
-              {recipe.title}
-            </h3>
-          </div>
+    <div
+      className={`group relative w-full h-full overflow-hidden rounded-2xl bg-[#fafafa] border border-[#ddd] shadow-md transition-all duration-300 ${
+        isHovered ? "shadow-lg translate-y-[-5px] border-[#ccc]" : ""
+      } ${className}`}
+      style={{ height: height ? `${height}px` : "auto" }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      id={id}
+    >
+      {/* Category badge */}
+      {category && (
+        <div className="absolute top-3 left-3 z-10">
+          <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-[#e6b800]/90 text-white backdrop-blur-md shadow-md">
+            {category}
+          </span>
         </div>
+      )}
 
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="inline-block px-2 py-1 text-xs font-semibold bg-primary-100 text-primary-800 rounded-full">
-              {recipe.category}
-            </span>
-            <span className="text-sm text-gray-500">
-              by {recipe.author?.name || "Unknown"}
-            </span>
+      {/* Favorite button */}
+      {onFavoriteToggle && (
+        <button
+          onClick={handleFavoriteClick}
+          className="absolute top-3 right-3 z-10 p-2 rounded-full bg-white/80 shadow-md hover:bg-white transition-all duration-200 transform hover:scale-110"
+        >
+          {isFavorite ? (
+            <HeartSolidIcon className="h-5 w-5 text-red-500" />
+          ) : (
+            <HeartIcon className="h-5 w-5 text-gray-600 group-hover:text-red-400" />
+          )}
+        </button>
+      )}
+
+      {/* Image with gradient overlay */}
+      <div className="relative w-full h-48 overflow-hidden rounded-t-2xl">
+        {imageUrl && !imageError ? (
+          <>
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover transition-transform duration-700 transform group-hover:scale-105"
+              onError={() => setImageError(true)}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60 group-hover:opacity-70 transition-opacity duration-300"></div>
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400 flex items-center justify-center rounded-t-2xl">
+            <span className="text-gray-600 font-medium">No image</span>
           </div>
+        )}
+      </div>
 
-          {/* Add rating display */}
-          <div className="flex items-center mb-2">
-            <StarIcon className="h-4 w-4 text-yellow-400" />
-            <span className="ml-1 text-sm text-gray-600">
-              {rating.average.toFixed(1)} ({rating.total})
-            </span>
+      {/* Content */}
+      <Link to={`/recipes/${_id}`} className="block">
+        <div className="p-5">
+          <h3 className="text-lg font-semibold text-[#262633] mb-2 line-clamp-2 group-hover:text-[#4a4a5e] transition-colors duration-200">
+            {title}
+          </h3>
+
+          {description && (
+            <p className="text-[#4a4a5e] text-sm line-clamp-2 mb-3">
+              {description}
+            </p>
+          )}
+
+          {/* Recipe metadata */}
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-600">
+            <div className="flex items-center space-x-1">
+              <ClockIcon className="h-4 w-4" />
+              <span>{prepTime}</span>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <FireIcon className="h-4 w-4" />
+              <span>{difficulty}</span>
+            </div>
+
+            {author && author.name && (
+              <div className="flex items-center space-x-1">
+                <UserIcon className="h-4 w-4" />
+                <span>{author.name}</span>
+              </div>
+            )}
           </div>
-
-          <p className="text-gray-600 text-sm line-clamp-2 h-10">
-            {recipe.description || "No description available"}
-          </p>
         </div>
       </Link>
+
+      {/* View recipe button */}
+      <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-[#fafafa] to-transparent pt-8 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <Link
+          to={`/recipes/${_id}`}
+          className="block w-full py-2 text-center text-sm font-medium text-white bg-[#262633] rounded-lg hover:bg-[#333344] transition-colors duration-200"
+        >
+          View Recipe
+        </Link>
+      </div>
     </div>
   );
 };

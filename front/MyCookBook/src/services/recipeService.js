@@ -100,14 +100,61 @@ export const deleteRecipe = async (id) => {
   return response.data;
 };
 
-export const rateRecipe = async (id, value) => {
-  const response = await api.post(`/recipes/${id}/ratings`, { value });
-  return response.data;
-};
+// Add a simple cache for ratings
+// Keep this outside the function to persist between calls
+const ratingsCache = new Map();
 
 export const getRecipeRating = async (id) => {
-  const response = await api.get(`/recipes/${id}/ratings`);
-  return response.data;
+  try {
+    // Check cache first
+    if (ratingsCache.has(id)) {
+      const { data, timestamp } = ratingsCache.get(id);
+      // Cache valid for 5 minutes
+      if (Date.now() - timestamp < 5 * 60 * 1000) {
+        console.log(`Using cached rating for recipe ${id}`);
+        return data;
+      }
+      // Cache expired, will fetch fresh data
+      console.log(`Cache expired for recipe ${id}, fetching fresh data`);
+    }
+
+    console.log(`Fetching rating for recipe ${id} from API`);
+    const response = await api.get(`/recipes/${id}/ratings`);
+
+    // Store in cache
+    ratingsCache.set(id, {
+      data: response.data,
+      timestamp: Date.now(),
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching rating for recipe ${id}:`, error);
+
+    // If we have cached data, even if expired, use it as a fallback
+    if (ratingsCache.has(id)) {
+      console.log(`Using expired cache as fallback for recipe ${id}`);
+      return ratingsCache.get(id).data;
+    }
+
+    // Re-throw the error so the component can handle it
+    throw error;
+  }
+};
+
+export const rateRecipe = async (id, value) => {
+  try {
+    console.log(`Submitting rating ${value} for recipe ${id}`);
+    const response = await api.post(`/recipes/${id}/ratings`, { value });
+
+    // Invalidate the cache for this recipe
+    ratingsCache.delete(id);
+
+    return response.data;
+  } catch (error) {
+    console.error(`Error rating recipe ${id}:`, error);
+    throw error;
+  }
 };
 
 // Comment endpoints

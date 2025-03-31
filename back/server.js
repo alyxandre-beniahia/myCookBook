@@ -28,12 +28,33 @@ app.use(cors());
 app.use(helmet()); // Sets various HTTP headers for security
 app.use(mongoSanitize()); // Prevents NoSQL injection
 
-// Apply rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-});
-app.use("/api/", limiter);
+// // Apply general rate limiting
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 100, // limit each IP to 100 requests per windowMs
+// });
+// app.use("/api/", limiter);
+
+// // Add a specific rate limiter for ratings endpoints with higher limits
+// const ratingsLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 200, // higher limit for ratings
+//   message: "Too many rating requests, please try again later.",
+// });
+
+// // Apply ratings limiter to the ratings endpoints
+// app.use("/api/recipes/:id/ratings", ratingsLimiter);
+
+// // Add this after your existing rate limiter
+// const authLimiter = rateLimit({
+//   windowMs: 60 * 60 * 1000, // 1 hour
+//   max: 10, // 10 registration/login attempts per hour
+//   message: "Too many authentication attempts, please try again later.",
+// });
+
+// Apply it before your routes
+// app.use("/api/auth/register", authLimiter);
+// app.use("/api/auth/login", authLimiter);
 
 // Set up routes
 app.use("/api/auth", authRoutes);

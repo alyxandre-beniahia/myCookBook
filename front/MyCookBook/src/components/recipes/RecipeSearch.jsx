@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import GooeyButton from "../layout/GooeyButton";
 
 const RecipeSearch = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -11,7 +12,7 @@ const RecipeSearch = () => {
   const [selectedCategory, setSelectedCategory] = useState(initialCategory);
 
   const handleSearch = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
 
     const params = {};
     if (searchQuery) params.query = searchQuery;
@@ -32,9 +33,9 @@ const RecipeSearch = () => {
 
   return (
     <div className="mb-8">
-      <h1 className="text-3xl font-bold text-gray-900 mb-4">Find Recipes</h1>
+      <h1 className="text-3xl font-bold text-[#262633] mb-4">Find Recipes</h1>
 
-      <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-grow relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
@@ -44,19 +45,29 @@ const RecipeSearch = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by title or ingredients"
-            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-4 py-2 pl-10 bg-white text-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleSearch();
+              }
+            }}
           />
         </div>
-        <button
-          type="submit"
-          className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
+
+        <GooeyButton
+          onClick={handleSearch}
+          className="px-4 py-2 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-white"
+          particleCount={15}
+          particleDistances={[80, 20]}
+          hoverColor="#262633"
         >
           Search
-        </button>
-      </form>
+        </GooeyButton>
+      </div>
 
       <div className="mt-4">
-        <p className="text-sm font-medium text-gray-700 mb-2">
+        <p className="text-sm font-medium text-[#262633] mb-2">
           Filter by category:
         </p>
         <div className="flex flex-wrap gap-2">
