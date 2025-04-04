@@ -1,20 +1,24 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createRecipe, updateRecipe, getRecipeById } from '../../services/recipeService';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  createRecipe,
+  updateRecipe,
+  getRecipeById,
+} from "../../services/recipeService";
 
 const RecipeForm = ({ recipeId }) => {
   const isEditing = !!recipeId;
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    ingredients: [''],
-    steps: [''],
-    category: 'plat',
-    image: null
+    title: "",
+    description: "",
+    ingredients: [""],
+    steps: [""],
+    category: "plat",
+    image: null,
   });
-  
+
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(isEditing);
   const [submitting, setSubmitting] = useState(false);
@@ -26,23 +30,23 @@ const RecipeForm = ({ recipeId }) => {
         try {
           setLoading(true);
           const recipe = await getRecipeById(recipeId);
-          
+
           setFormData({
-            title: recipe.title || '',
-            description: recipe.description || '',
-            ingredients: recipe.ingredients || [''],
-            steps: recipe.steps || [''],
-            category: recipe.category || 'plat',
-            image: null // We don't load the image for editing
+            title: recipe.title || "",
+            description: recipe.description || "",
+            ingredients: recipe.ingredients || [""],
+            steps: recipe.steps || [""],
+            category: recipe.category || "plat",
+            image: null, // We don't load the image for editing
           });
-          
+
           if (recipe.image?.url) {
             setImagePreview(recipe.image.url);
           }
-          
+
           setError(null);
         } catch (err) {
-          setError('Failed to load recipe');
+          setError("Failed to load recipe");
           console.error(err);
         } finally {
           setLoading(false);
@@ -55,20 +59,20 @@ const RecipeForm = ({ recipeId }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        image: file
+        image: file,
       }));
-      
+
       // Create a preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -81,25 +85,25 @@ const RecipeForm = ({ recipeId }) => {
   const handleIngredientChange = (index, value) => {
     const newIngredients = [...formData.ingredients];
     newIngredients[index] = value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      ingredients: newIngredients
+      ingredients: newIngredients,
     }));
   };
 
   const handleStepChange = (index, value) => {
     const newSteps = [...formData.steps];
     newSteps[index] = value;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      steps: newSteps
+      steps: newSteps,
     }));
   };
 
   const addIngredient = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      ingredients: [...prev.ingredients, '']
+      ingredients: [...prev.ingredients, ""],
     }));
   };
 
@@ -107,17 +111,17 @@ const RecipeForm = ({ recipeId }) => {
     if (formData.ingredients.length > 1) {
       const newIngredients = [...formData.ingredients];
       newIngredients.splice(index, 1);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        ingredients: newIngredients
+        ingredients: newIngredients,
       }));
     }
   };
 
   const addStep = () => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      steps: [...prev.steps, '']
+      steps: [...prev.steps, ""],
     }));
   };
 
@@ -125,56 +129,64 @@ const RecipeForm = ({ recipeId }) => {
     if (formData.steps.length > 1) {
       const newSteps = [...formData.steps];
       newSteps.splice(index, 1);
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        steps: newSteps
+        steps: newSteps,
       }));
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate form
-    const nonEmptyIngredients = formData.ingredients.filter(i => i.trim());
-    const nonEmptySteps = formData.steps.filter(s => s.trim());
-    
+    const nonEmptyIngredients = formData.ingredients.filter((i) => i.trim());
+    const nonEmptySteps = formData.steps.filter((s) => s.trim());
+
     if (!formData.title.trim()) {
-      setError('Title is required');
+      setError("Title is required");
       return;
     }
-    
+
+    if (!formData.description.trim()) {
+      setError("Description is required");
+      return;
+    }
+
     if (nonEmptyIngredients.length === 0) {
-      setError('At least one ingredient is required');
+      setError("At least one ingredient is required");
       return;
     }
-    
+
     if (nonEmptySteps.length === 0) {
-      setError('At least one step is required');
+      setError("At least one step is required");
       return;
     }
-    
+
     try {
       setSubmitting(true);
-      
+
       // Clean up empty ingredients and steps
       const cleanedFormData = {
         ...formData,
         ingredients: nonEmptyIngredients,
-        steps: nonEmptySteps
+        steps: nonEmptySteps,
       };
-      
+
+      // Log what we're submitting for debugging
+      console.log("Submitting recipe:", cleanedFormData);
+
       let response;
       if (isEditing) {
         response = await updateRecipe(recipeId, cleanedFormData);
       } else {
         response = await createRecipe(cleanedFormData);
       }
-      
-      navigate(`/recipes/${response.id}`);
+      console.log("Response from server:", response._id);
+      navigate(`/recipes/${response._id}`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to save recipe');
-      console.error(err);
+      console.error("Submission error:", err);
+      setError(err.response?.data?.message || "Failed to save recipe");
     } finally {
       setSubmitting(false);
     }
@@ -191,18 +203,21 @@ const RecipeForm = ({ recipeId }) => {
   return (
     <div className="max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">
-        {isEditing ? 'Edit Recipe' : 'Create New Recipe'}
+        {isEditing ? "Edit Recipe" : "Create New Recipe"}
       </h2>
-      
+
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="title"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Title *
           </label>
           <input
@@ -216,9 +231,12 @@ const RecipeForm = ({ recipeId }) => {
             placeholder="Recipe title"
           />
         </div>
-        
+
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="description"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Description
           </label>
           <textarea
@@ -230,9 +248,12 @@ const RecipeForm = ({ recipeId }) => {
             placeholder="Describe your recipe"
           />
         </div>
-        
+
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="category"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Category *
           </label>
           <select
@@ -248,7 +269,7 @@ const RecipeForm = ({ recipeId }) => {
             <option value="dessert">Dessert</option>
           </select>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Ingredients *
@@ -259,7 +280,9 @@ const RecipeForm = ({ recipeId }) => {
                 <input
                   type="text"
                   value={ingredient}
-                  onChange={(e) => handleIngredientChange(index, e.target.value)}
+                  onChange={(e) =>
+                    handleIngredientChange(index, e.target.value)
+                  }
                   className="input flex-grow"
                   placeholder={`Ingredient ${index + 1}`}
                 />
@@ -267,7 +290,11 @@ const RecipeForm = ({ recipeId }) => {
                   type="button"
                   onClick={() => removeIngredient(index)}
                   disabled={formData.ingredients.length <= 1}
-                  className={`btn ${formData.ingredients.length <= 1 ? 'bg-gray-200 text-gray-400' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}
+                  className={`btn ${
+                    formData.ingredients.length <= 1
+                      ? "bg-gray-200 text-gray-400"
+                      : "bg-red-100 text-red-600 hover:bg-red-200"
+                  }`}
                 >
                   Remove
                 </button>
@@ -282,7 +309,7 @@ const RecipeForm = ({ recipeId }) => {
             </button>
           </div>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Steps *
@@ -303,7 +330,11 @@ const RecipeForm = ({ recipeId }) => {
                   type="button"
                   onClick={() => removeStep(index)}
                   disabled={formData.steps.length <= 1}
-                  className={`btn ${formData.steps.length <= 1 ? 'bg-gray-200 text-gray-400' : 'bg-red-100 text-red-600 hover:bg-red-200'}`}
+                  className={`btn ${
+                    formData.steps.length <= 1
+                      ? "bg-gray-200 text-gray-400"
+                      : "bg-red-100 text-red-600 hover:bg-red-200"
+                  }`}
                 >
                   Remove
                 </button>
@@ -318,7 +349,7 @@ const RecipeForm = ({ recipeId }) => {
             </button>
           </div>
         </div>
-        
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Image
@@ -332,19 +363,16 @@ const RecipeForm = ({ recipeId }) => {
               onChange={handleImageChange}
               className="hidden"
             />
-            <label
-              htmlFor="image"
-              className="btn btn-secondary cursor-pointer"
-            >
-              {imagePreview ? 'Change Image' : 'Upload Image'}
+            <label htmlFor="image" className="btn btn-secondary cursor-pointer">
+              {imagePreview ? "Change Image" : "Upload Image"}
             </label>
-            
+
             {imagePreview && (
               <button
                 type="button"
                 onClick={() => {
                   setImagePreview(null);
-                  setFormData(prev => ({ ...prev, image: null }));
+                  setFormData((prev) => ({ ...prev, image: null }));
                 }}
                 className="btn bg-red-100 text-red-600 hover:bg-red-200"
               >
@@ -352,7 +380,7 @@ const RecipeForm = ({ recipeId }) => {
               </button>
             )}
           </div>
-          
+
           {imagePreview && (
             <div className="mt-3">
               <img
@@ -363,7 +391,7 @@ const RecipeForm = ({ recipeId }) => {
             </div>
           )}
         </div>
-        
+
         <div className="flex justify-end space-x-3 pt-4">
           <button
             type="button"
@@ -375,9 +403,17 @@ const RecipeForm = ({ recipeId }) => {
           <button
             type="submit"
             disabled={submitting}
-            className={`btn btn-primary ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+            className={`btn btn-primary ${
+              submitting ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
-            {submitting ? (isEditing ? 'Updating...' : 'Creating...') : (isEditing ? 'Update Recipe' : 'Create Recipe')}
+            {submitting
+              ? isEditing
+                ? "Updating..."
+                : "Creating..."
+              : isEditing
+              ? "Update Recipe"
+              : "Create Recipe"}
           </button>
         </div>
       </form>
