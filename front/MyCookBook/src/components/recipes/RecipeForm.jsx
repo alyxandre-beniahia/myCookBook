@@ -315,7 +315,7 @@ const RecipeForm = ({ recipeId }) => {
               className="btn btn-secondary"
             >
               Add Step
-              </button>
+            </button>
           </div>
         </div>
         
